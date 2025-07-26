@@ -54,7 +54,7 @@ A modern, full-stack hotel booking system built with React.js, Node.js, Express,
 - npm or yarn
 
 ### 1. Clone the Repository
-git clone https://github.com/yourusername/sheyrooms.git
+git clone https://github.com/diwansh12/Sheyrooms.git
 cd sheyrooms
 
 text
@@ -221,8 +221,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/diwansh12)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
+- GitHub: diwansh12
+- LinkedIn: https://www.linkedin.com/in/diwansh-sood-201ab0239/
 - Email: diwansh1112@gmail.com
 
 ## 🙏 Acknowledgments
@@ -268,7 +268,7 @@ git commit -m "Initial commit: SheyRooms hotel booking system
 - RESTful API with proper error handling"
 
 # Add your GitHub repository as remote origin
-git remote add origin https://github.com/diwansh12/sheyrooms.git
+git remote add origin https://github.com/diwansh12/Sheyrooms.git
 
 # Push to GitHub
 git push -u origin main
