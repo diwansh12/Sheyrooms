@@ -1,4 +1,4 @@
-// screens/Bookingscreen.jsx - ALL WARNINGS FIXED
+// screens/Bookingscreen.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { message, Modal, Divider, Steps, Card, Row, Col, Tag, Spin } from 'antd';
@@ -268,7 +268,7 @@ function Bookingscreen() {
   };
 
   const paypalOptions = {
-    "client-id": "AZeCFelxYsWdBQGD23iW5E_dmPdi5svLf0SJC8OMjBRkMl0yyzfX4lwtfIO8IvzcVck7s6cTyI9Hntf9",
+    "client-id": "AZwCSNQNKFdYp5y0jcgwSGgy8ZuuX0reXn_ZHwvL5ceQCp9zHlYa7o42vJ1m42ZnzAkemKfQ3fu7HGil",
     currency: "USD",
     intent: "capture"
   };

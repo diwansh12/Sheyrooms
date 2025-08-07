@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { body } = require('express-validator');
+const { validationResult } = require('express-validator');
 
 const jwtSecret = process.env.JWT_SECRET || 'secret123';
 

@@ -62,7 +62,8 @@ function Bookings() {
                     <td>
                       <code className="text-primary">{booking._id.slice(-8)}</code>
                     </td>
-                    <td>{booking.userid}</td>
+                    <td>{booking.userid?.name}<br/><small>{booking.userid?.email}</small></td>
+
                     <td className="fw-semibold">{booking.room}</td>
                     <td>{new Date(booking.fromdate).toLocaleDateString()}</td>
                     <td>{new Date(booking.todate).toLocaleDateString()}</td>
@@ -191,7 +192,7 @@ function Users() {
         console.log('Fetching users...');
         const response = await axiosInstance.get("/api/users/getallusers");
         console.log('Users response:', response.data);
-        setUsers(response.data);
+        setUsers(response.data.data);
         setLoading(false);
       } catch (error) {
         console.error('Users fetch error:', error);

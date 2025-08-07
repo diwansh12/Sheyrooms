@@ -289,12 +289,13 @@ router.post("/getuserbookings", authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Get user bookings error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch bookings",
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
-    });
+   console.error("Get all bookings error:", error);
+res.status(500).json({
+  success: false,
+  message: "Failed to fetch bookings",
+  error: error.message // Add this temporarily for dev debugging
+});
+
   }
 });
 

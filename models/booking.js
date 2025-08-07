@@ -1,5 +1,6 @@
 // models/booking.js - Enhanced Booking Model
 const mongoose = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const guestSchema = {
   name: { type: String, required: true },
@@ -116,4 +117,5 @@ bookingSchema.pre('save', function(next) {
   next();
 });
 
+bookingSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model('Booking', bookingSchema);

@@ -58,29 +58,41 @@ export const throttle = (func, limit) => {
 
 // Local storage with error handling
 export const safeLocalStorage = {
-  setItem: (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.warn('Failed to save to localStorage:', error);
-    }
-  },
+  setItem: (key, value) => {
+    try {
+      if (typeof value === "object") {
+        localStorage.setItem(key, JSON.stringify(value));
+      } else {
+        // Store primitive values (strings, numbers) directly
+        localStorage.setItem(key, value);
+      }
+    } catch (error) {
+      console.warn('Failed to save to localStorage:', error);
+    }
+  },
 
-  getItem: (key, defaultValue = null) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch (error) {
-      console.warn('Failed to read from localStorage:', error);
-      return defaultValue;
-    }
-  },
+  getItem: (key, defaultValue = null) => {
+    try {
+      const item = localStorage.getItem(key);
+      if (!item) return defaultValue;
+      try {
+        // Try parsing JSON first
+        return JSON.parse(item);
+      } catch {
+        // If parse fails, return raw string (e.g. for tokens)
+        return item;
+      }
+    } catch (error) {
+      console.warn('Failed to read from localStorage:', error);
+      return defaultValue;
+    }
+  },
 
-  removeItem: (key) => {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.warn('Failed to remove from localStorage:', error);
-    }
-  }
+  removeItem: (key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('Failed to remove from localStorage:', error);
+    }
+  }
 };

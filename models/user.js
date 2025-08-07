@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const mongoosePaginate = require('mongoose-paginate-v2');
 const userSchema = mongoose.Schema({
   name: {
     type: String,  // ✅ Enforce string only
@@ -26,6 +26,8 @@ const userSchema = mongoose.Schema({
 }, {
   timestamps: true
 });
+userSchema.plugin(mongoosePaginate);
 
 const userModel = mongoose.model('User', userSchema);
+
 module.exports = userModel;

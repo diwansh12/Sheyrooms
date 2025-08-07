@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import 'antd/dist/reset.css'; // for Antd v5+
+
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
@@ -8,7 +9,7 @@ import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <PayPalScriptProvider options={{ "client-id": "AZeCFelxYsWdBQGD23iW5E_dmPdi5svLf0SJC8OMjBRkMl0yyzfX4lwtfIO8IvzcVck7s6cTyI9Hntf9", currency: "USD" }}>
+    <PayPalScriptProvider options={{ "client-id": "AZwCSNQNKFdYp5y0jcgwSGgy8ZuuX0reXn_ZHwvL5ceQCp9zHlYa7o42vJ1m42ZnzAkemKfQ3fu7HGil", currency: "USD" }}>
     <App />
     </PayPalScriptProvider>
      

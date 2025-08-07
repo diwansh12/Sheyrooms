@@ -21,7 +21,7 @@ import Loader from './Components/Loader';
 function App() {
   return (
     <PayPalScriptProvider options={{ 
-      "client-id": "AZeCFelxYsWdBQGD23iW5E_dmPdi5svLf0SJC8OMjBRkMl0yyzfX4lwtfIO8IvzcVck7s6cTyI9Hntf9",
+      "client-id": "AZwCSNQNKFdYp5y0jcgwSGgy8ZuuX0reXn_ZHwvL5ceQCp9zHlYa7o42vJ1m42ZnzAkemKfQ3fu7HGil",
       currency: "USD"
     }}>
       <div className="App">

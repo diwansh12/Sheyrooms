@@ -1,12 +1,12 @@
-
-// screens/Homescreen.jsx - COMPLETELY FIXED with Professional Footer
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { DatePicker, Pagination, Select } from 'antd';
+import { DatePicker, Pagination, Select,  Dropdown, Button, Menu } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
+import 'antd/dist/reset.css';
 
-import Room from '../Components/Room'; 
+
+import Room from '../Components/Room';
 import Loader from '../Components/Loader';
 import Error from '../Components/Error';
 
@@ -25,15 +25,16 @@ const Homescreen = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [favorites, setFavorites] = useState([]);
 
-  // ✅ FIXED: Stable search params
+
   const [searchParams, setSearchParams] = useState({
     destination: '',
     dates: null,
-    guests: { adults: 2, children: 0 },
+    guests: { adults: 1, children: 0 }, // start at 1 adult, 0 children
     priceRange: [1000, 50000],
     rating: 0,
     sortBy: 'price-low'
   });
+
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,7 +47,7 @@ const Homescreen = () => {
       return;
     }
     fetchRooms();
-    
+
     const savedFavorites = JSON.parse(localStorage.getItem('favorite-rooms') || '[]');
     setFavorites(savedFavorites);
   }, [navigate]);
@@ -57,10 +58,10 @@ const Homescreen = () => {
       setError(null);
 
       const { data } = await axios.get('/api/rooms/getallrooms');
-      
+
       const roomsData = Array.isArray(data) ? data : data.rooms || [];
       console.log('Fetched rooms:', roomsData.length);
-      
+
       setRooms(roomsData);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -174,10 +175,12 @@ const Homescreen = () => {
     setCurrentPage(1);
   }, [processedRooms]);
 
-  // ✅ FIXED: Stable handlers to prevent re-renders
-  const updateSearchParams = useCallback((updates) => {
-    setSearchParams(prev => ({ ...prev, ...updates }));
-  }, []);
+const updateSearchParams = useCallback((updates) => {
+  console.log('Updating searchParams:', updates);
+  setSearchParams(prev => ({ ...prev, ...updates }));
+}, []);
+
+
 
   const getCurrentPageRooms = useMemo(() => {
     const startIndex = (currentPage - 1) * roomsPerPage;
@@ -222,6 +225,77 @@ const Homescreen = () => {
     );
   }
 
+ const GuestsPicker = ({ guests, setGuests, maxGuests = 10 }) => {
+  const totalGuests = guests.adults + guests.children;
+
+
+ const menuItems = [
+  {
+    key: 'adults',
+    label: (
+      <div className="d-flex justify-content-between align-items-center">
+        <div>
+          <strong>Adults</strong><br />
+          <small>Age 13+</small>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <Button 
+            size="small"
+            disabled={guests.adults <= 1}
+            onClick={() => setGuests({ ...guests, adults: guests.adults - 1 })}
+          >−</Button>
+          <span>{guests.adults}</span>
+          <Button 
+            size="small"
+            disabled={totalGuests >= maxGuests}
+            onClick={() => setGuests({ ...guests, adults: guests.adults + 1 })}
+          >+</Button>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: 'children',
+    label: (
+      <div className="d-flex justify-content-between align-items-center">
+        <div>
+          <strong>Children</strong><br />
+          <small>Age 2-12</small>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <Button 
+            size="small"
+            disabled={guests.children <= 0}
+            onClick={() => setGuests({ ...guests, children: guests.children - 1 })}
+          >−</Button>
+          <span>{guests.children}</span>
+          <Button 
+            size="small"
+            disabled={totalGuests >= maxGuests}
+            onClick={() => setGuests({ ...guests, children: guests.children + 1 })}
+          >+</Button>
+        </div>
+      </div>
+    ),
+  },
+];
+
+const menu = { items: menuItems };
+
+
+  return (
+   <Dropdown menu={menu} trigger={['click']}>
+  <Button
+    className="btn btn-outline-secondary btn-lg w-100 d-flex justify-content-between align-items-center"
+    style={{ height: '48px' }}
+  >
+    {totalGuests} guest{totalGuests !== 1 ? 's' : ''}
+  </Button>
+</Dropdown>
+  );
+};
+
+
   return (
     <>
       <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
@@ -255,124 +329,32 @@ const Homescreen = () => {
                     />
                   </div>
 
-                 {/* ✅ FIXED Date Picker - Updated for latest Ant Design */}
-<div className="col-md-3">
-  <label className="form-label fw-semibold">📅 Check-in / Check-out</label>
-  <div id="date-picker-container">
-    <RangePicker
-      value={searchParams.dates}
-      onChange={(dates) => updateSearchParams({ dates })}
-     format="DD MMM YYYY"
+                  <div className="col-md-3">
+                    <label className="form-label fw-semibold">📅 Check-in / Check-out</label>
+                    <RangePicker
+                      value={searchParams.dates}
+                      onChange={(dates) => updateSearchParams({ dates })}
+                      format="DD MMM YYYY"
+                      placeholder={['Check-in', 'Check-out']}
+                      size="large"
+                      style={{ width: '100%', height: '48px' }}
+                      disabledDate={(current) => current && current < moment().startOf('day')}
+                      allowClear
+                      getPopupContainer={() => document.body}
+                      inputReadOnly={true}
 
-      placeholder={['Check-in', 'Check-out']}
-      size="large"
-      style={{ width: '100%', height: '48px' }}
-      disabledDate={(current) => current && current < moment().startOf('day')}
-      allowClear
-      styles={{
-        popup: {
-          root: {
-            zIndex: 9999
-          }
-        }
-      }}
-      getPopupContainer={() => document.getElementById('date-picker-container') || document.body}
-      inputReadOnly={false}
-      autoFocus={false}
-    />
-  </div>
-</div>
-
-
-                  {/* ✅ FIXED Guest Picker */}
-                  <div className="col-md-2">
-                    <label className="form-label fw-semibold">👥 Guests</label>
-                    <div className="dropdown">
-                      <button
-                        className="btn btn-outline-secondary btn-lg w-100 dropdown-toggle d-flex justify-content-between align-items-center"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        style={{ height: '48px' }}
-                      >
-                        <span>
-                          {searchParams.guests.adults + searchParams.guests.children} guest
-                          {searchParams.guests.adults + searchParams.guests.children !== 1 ? 's' : ''}
-                        </span>
-                      </button>
-                      <div className="dropdown-menu p-3" style={{ width: '280px' }}>
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <div>
-                            <div className="fw-bold">Adults</div>
-                            <small className="text-muted">Age 13+</small>
-                          </div>
-                          <div className="d-flex align-items-center gap-2">
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => updateSearchParams({
-                                guests: {
-                                  ...searchParams.guests,
-                                  adults: Math.max(1, searchParams.guests.adults - 1)
-                                }
-                              })}
-                              disabled={searchParams.guests.adults <= 1}
-                            >
-                              −
-                            </button>
-                            <span className="fw-bold mx-2">{searchParams.guests.adults}</span>
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => updateSearchParams({
-                                guests: {
-                                  ...searchParams.guests,
-                                  adults: searchParams.guests.adults + 1
-                                }
-                              })}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <div className="fw-bold">Children</div>
-                            <small className="text-muted">Age 2-12</small>
-                          </div>
-                          <div className="d-flex align-items-center gap-2">
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => updateSearchParams({
-                                guests: {
-                                  ...searchParams.guests,
-                                  children: Math.max(0, searchParams.guests.children - 1)
-                                }
-                              })}
-                              disabled={searchParams.guests.children <= 0}
-                            >
-                              −
-                            </button>
-                            <span className="fw-bold mx-2">{searchParams.guests.children}</span>
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => updateSearchParams({
-                                guests: {
-                                  ...searchParams.guests,
-                                  children: searchParams.guests.children + 1
-                                }
-                              })}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      autoFocus={false}
+                    />
                   </div>
 
+<div className="col-md-2">
+  <label className="form-label fw-semibold">👥 Guests</label>
+  <GuestsPicker 
+    guests={searchParams.guests} 
+    setGuests={(newGuests) => updateSearchParams({ guests: newGuests })}
+    maxGuests={10} // or dynamic max
+  />
+</div>
                   {/* ✅ FIXED Sort Dropdown */}
                   <div className="col-md-2">
                     <label className="form-label fw-semibold">Sort By</label>
@@ -381,7 +363,7 @@ const Homescreen = () => {
                       onChange={(value) => updateSearchParams({ sortBy: value })}
                       size="large"
                       style={{ width: '100%', height: '48px' }}
-                      popupClassName="sort-dropdown-popup"
+                      classNames={{ popup: { root: "sort-dropdown-popup" } }}
                       getPopupContainer={() => document.body}
                     >
                       <Option value="price-low">Price: Low to High</Option>
@@ -393,7 +375,7 @@ const Homescreen = () => {
 
                   {/* Search Button */}
                   <div className="col-md-2 d-flex align-items-end">
-                    <button 
+                    <button
                       className="btn btn-primary btn-lg w-100"
                       style={{ height: '48px' }}
                       disabled={loading}
@@ -490,7 +472,7 @@ const Homescreen = () => {
                       <p className="text-muted mb-4">
                         Try adjusting your search criteria
                       </p>
-                      <button 
+                      <button
                         className="btn btn-primary"
                         onClick={clearAllFilters}
                       >
@@ -505,19 +487,18 @@ const Homescreen = () => {
                     {getCurrentPageRooms.map((room) => (
                       <div key={room._id} className="col mb-4">
                         <div className="position-relative">
-                          <Room 
+                          <Room
                             room={room}
                             fromdate={searchParams.dates?.[0]?.format('DD-MM-YYYY')}
                             todate={searchParams.dates?.[1]?.format('DD-MM-YYYY')}
                           />
-                          
+
                           {/* Favorite Button */}
                           <button
-                            className={`btn position-absolute top-0 end-0 m-3 ${
-                              favorites.includes(room._id) 
-                                ? 'btn-danger' 
-                                : 'btn-outline-danger'
-                            }`}
+                            className={`btn position-absolute top-0 end-0 m-3 ${favorites.includes(room._id)
+                              ? 'btn-danger'
+                              : 'btn-outline-danger'
+                              }`}
                             onClick={() => toggleFavorite(room._id)}
                             style={{ zIndex: 1 }}
                           >
@@ -562,8 +543,8 @@ const Homescreen = () => {
                   🏨 SheyRooms
                 </h2>
                 <p className="text-light opacity-75 mb-3">
-                  Your trusted partner for finding the perfect accommodation. 
-                  We connect travelers with amazing stays worldwide, ensuring 
+                  Your trusted partner for finding the perfect accommodation.
+                  We connect travelers with amazing stays worldwide, ensuring
                   comfort, quality, and unforgettable experiences.
                 </p>
                 <div className="d-flex gap-3">
@@ -676,9 +657,9 @@ const Homescreen = () => {
                   Get the latest deals and travel tips delivered to your inbox.
                 </p>
                 <div className="input-group">
-                  <input 
-                    type="email" 
-                    className="form-control" 
+                  <input
+                    type="email"
+                    className="form-control"
                     placeholder="Enter your email"
                   />
                   <button className="btn btn-primary" type="button">
@@ -699,24 +680,24 @@ const Homescreen = () => {
             </div>
             <div className="col-md-6 text-md-end">
               <div className="d-flex justify-content-md-end gap-3 flex-wrap">
-                <img 
-                  src="https://img.icons8.com/color/48/visa.png" 
-                  alt="Visa" 
+                <img
+                  src="https://img.icons8.com/color/48/visa.png"
+                  alt="Visa"
                   style={{ height: '24px' }}
                 />
-                <img 
-                  src="https://img.icons8.com/color/48/mastercard-logo.png" 
-                  alt="Mastercard" 
+                <img
+                  src="https://img.icons8.com/color/48/mastercard-logo.png"
+                  alt="Mastercard"
                   style={{ height: '24px' }}
                 />
-                <img 
-                  src="https://img.icons8.com/color/48/paypal.png" 
-                  alt="PayPal" 
+                <img
+                  src="https://img.icons8.com/color/48/paypal.png"
+                  alt="PayPal"
                   style={{ height: '24px' }}
                 />
-                <img 
-                  src="https://img.icons8.com/color/48/google-pay-india.png" 
-                  alt="Google Pay" 
+                <img
+                  src="https://img.icons8.com/color/48/google-pay-india.png"
+                  alt="Google Pay"
                   style={{ height: '24px' }}
                 />
               </div>
@@ -725,8 +706,7 @@ const Homescreen = () => {
         </div>
       </footer>
 
-      {/* Custom CSS for date picker fixes */}
-      <style jsx global>{`
+      <style>{`
         .ant-picker {
           border-radius: 8px !important;
           border: 1px solid #ced4da !important;
@@ -742,7 +722,7 @@ const Homescreen = () => {
         }
         
         .ant-picker-dropdown {
-          z-index: 9999 !important;
+          z-index: 5000 !important;
         }
         
         .sort-dropdown-popup {
