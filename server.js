@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 app.use(cors({
   origin: [
     'http://localhost:3000', // for development
-    'https://sheyrooms-frontend.vercel.app/' // your production frontend
+    'https://sheyrooms-frontend.vercel.app' // your production frontend
   ],
   credentials: true
 }));
