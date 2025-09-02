@@ -168,7 +168,7 @@ router.get('/fix-room-types', async (req, res) => {
     
     // Find all rooms with invalid types
     const roomsToFix = await Room.find({
-      type: { $in: ['Non-Delux', 'Non-Deluxe'] }
+      type: { $in: ['Non-Delux', 'Non-Deluxe', 'Delux'] }
     });
     
     console.log('📋 Found rooms to fix:', roomsToFix.length);
@@ -190,6 +190,10 @@ router.get('/fix-room-types', async (req, res) => {
       {
         filter: { type: 'Non-Deluxe' },
         update: { $set: { type: 'Standard' } }
+      },
+      {
+        filter: { type: 'Delux' },
+        update: { $set: { type: 'Delux' } }
       }
     ];
     
@@ -216,6 +220,57 @@ router.get('/fix-room-types', async (req, res) => {
     });
   }
 });
+
+// Clean up specific room bookings
+router.post('/cleanup-room-bookings/:roomId', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { bookingIdsToRemove, removeAll = false } = req.body;
+    
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: 'Room not found'
+      });
+    }
+    
+    if (removeAll) {
+      // Remove all bookings
+      room.currentbookings = [];
+    } else if (bookingIdsToRemove && bookingIdsToRemove.length > 0) {
+      // Remove specific bookings
+      room.currentbookings = room.currentbookings.filter(
+        booking => !bookingIdsToRemove.includes(booking.bookingId?.toString())
+      );
+    } else {
+      // Remove long-running test bookings (over 30 days)
+      room.currentbookings = room.currentbookings.filter(booking => {
+        const start = new Date(booking.fromdate);
+        const end = new Date(booking.todate);
+        const daysDiff = (end - start) / (1000 * 60 * 60 * 24);
+        return daysDiff <= 30; // Keep bookings 30 days or less
+      });
+    }
+    
+    await room.save();
+    
+    res.json({
+      success: true,
+      message: 'Room bookings cleaned up successfully',
+      remainingBookings: room.currentbookings.length
+    });
+    
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cleanup bookings',
+      error: error.message
+    });
+  }
+});
+
 
 
 
