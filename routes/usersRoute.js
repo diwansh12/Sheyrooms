@@ -5,10 +5,37 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/user');
 const router = express.Router();
 const { authenticateToken, authorizeAdmin } = require('../middleware/validation');
-const jwtSecret = process.env.JWT_SECRET || 'secret123';
+
+// ✅ CRITICAL FIX: Same secret handling as middleware
+const jwtSecret = process.env.JWT_SECRET;
+
+if (!jwtSecret) {
+  console.error('❌ CRITICAL ERROR: JWT_SECRET environment variable is not set in users route!');
+  process.exit(1);
+}
+
+console.log('🔑 Users Route - JWT Secret loaded:', {
+  present: !!jwtSecret,
+  length: jwtSecret.length,
+  preview: jwtSecret.substring(0, 10) + '...'
+});
+
+router.get('/', (req, res) => {
+  res.json({ 
+    message: 'Users API endpoint is working',
+    status: 'success',
+    jwtSecretLength: jwtSecret.length, // Debug info
+    availableRoutes: [
+      'POST /api/users/register - Register new user',
+      'POST /api/users/login - User login', 
+      'GET /api/users/getallusers - Get all users (Admin only)',
+      'GET /api/users/verify - Verify JWT token'
+    ],
+    timestamp: new Date()
+  });
+});
 
 // REGISTER
-// In routes/usersRoute.js - REGISTER route
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -21,6 +48,7 @@ router.post("/register", async (req, res) => {
       userName = `${name.first} ${name.last}`.trim();
     } else {
       return res.status(400).json({ 
+        success: false,
         message: 'Valid name is required' 
       });
     }
@@ -29,6 +57,7 @@ router.post("/register", async (req, res) => {
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ 
+        success: false,
         message: 'User with this email already exists' 
       });
     }
@@ -46,6 +75,7 @@ router.post("/register", async (req, res) => {
     const savedUser = await newUser.save();
 
     res.status(201).json({ 
+      success: true,
       message: 'User registered successfully',
       user: {
         id: savedUser._id,
@@ -57,16 +87,19 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ 
+      success: false,
       message: 'Server error during registration',
       error: error.message 
     });
   }
 });
 
-// LOGIN route - ensure response format is correct
+// ✅ FIXED LOGIN route with consistent secret usage
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    console.log('🔐 Login attempt for email:', email);
 
     if (!email || !password) {
       return res.status(400).json({ 
@@ -75,9 +108,10 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(400).json({ 
         success: false,
         message: "Invalid credentials" 
@@ -86,24 +120,28 @@ router.post("/login", async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log('❌ Invalid password for user:', email);
       return res.status(400).json({ 
         success: false,
         message: "Invalid credentials" 
       });
     }
 
-   const token = jwt.sign(
-  { 
-    userId: user._id,
-    email: user.email,
-    isAdmin: user.isAdmin 
-  }, 
-  jwtSecret,  // ✅ this is the correct secret
-  { expiresIn: '7d' } // ✅ options go here
+    // ✅ FIXED: Use same secret as middleware, proper syntax
+    const token = jwt.sign(
+  { userId: user._id, email: user.email, isAdmin: user.isAdmin },
+  jwtSecret,                                   // ✅ the secret must be the 2nd arg
+  { expiresIn: '7d', algorithm: 'HS256' }      // (algorithm optional; HS256 is default)
 );
 
 
-    // ✅ Ensure name is a string in response
+    console.log('✅ Login successful for user:', {
+      email: user.email,
+      userId: user._id,
+      tokenCreated: !!token,
+      secretLength: jwtSecret.length
+    });
+
     const userResponse = {
       _id: user._id,
       name: typeof user.name === 'string' ? user.name : `${user.name.first || ''} ${user.name.last || ''}`.trim(),
@@ -120,7 +158,7 @@ router.post("/login", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("❌ Login error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error"
@@ -131,7 +169,7 @@ router.post("/login", async (req, res) => {
 router.get('/getallusers', authenticateToken, authorizeAdmin, async (req, res) => {
   try {
     console.log('👥 Admin requesting all users');
-    console.log('User from token:', req.user);
+    console.log('User from token:', req.user.email);
     
     const {
       page = 1,
@@ -204,18 +242,67 @@ router.get('/getallusers', authenticateToken, authorizeAdmin, async (req, res) =
   }
 });
 
-// SIMPLE TOKEN VERIFY (front-end uses to keep session)
-router.get('/verify', async (req, res) => {
+// Add to your routes/usersRoute.js
+router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    const decoded = jwt.verify(token, jwtSecret);
-    const user = await User.findById(decoded.userId);
-    if (!user) throw new Error();
-    res.json({ user });
-  } catch {
-    res.status(401).json({ message: 'Invalid token' });
+    const user = await User.findById(req.user._id).select('-password');
+    res.json({ success: true, profile: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch profile' });
   }
 });
 
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const updates = req.body;
+    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
+    res.json({ success: true, profile: user, message: 'Profile updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
+  }
+});
+
+
+// ✅ FIXED TOKEN VERIFY route with same secret
+router.get('/verify', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'No token provided' 
+      });
+    }
+
+    // ✅ FIXED: Use same secret and algorithm as login/middleware
+    const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] });
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    res.json({ 
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin || false
+      }
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ 
+      success: false, 
+      message: 'Invalid token' 
+    });
+  }
+});
 
 module.exports = router;

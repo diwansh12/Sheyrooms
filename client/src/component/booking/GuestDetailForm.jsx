@@ -1,7 +1,7 @@
 // components/booking/GuestDetailsForm.jsx - Guest Details Component
 import React from 'react';
 import { Plus, Minus, User, Mail, Phone, Globe } from 'lucide-react';
-import Button from '../ui/Button';
+import Button from '../../Components/ui/Button';
 
 const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
   const updatePrimaryGuest = (field, value) => {
@@ -16,10 +16,10 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
   const updateGuestCount = (type, increment) => {
     const currentCount = data.guestCount[type];
     const newCount = Math.max(0, currentCount + (increment ? 1 : -1));
-    
+
     // Ensure total doesn't exceed room capacity
-    const total = Object.values({...data.guestCount, [type]: newCount}).reduce((sum, count) => sum + count, 0);
-    
+    const total = Object.values({ ...data.guestCount, [type]: newCount }).reduce((sum, count) => sum + count, 0);
+
     if (total <= room.maxcount) {
       onChange({
         guestCount: {
@@ -38,7 +38,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
       age: '',
       relation: 'friend'
     };
-    
+
     onChange({
       additionalGuests: [...data.additionalGuests, newGuest]
     });
@@ -48,7 +48,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
     const updatedGuests = data.additionalGuests.map(guest =>
       guest.id === guestId ? { ...guest, [field]: value } : guest
     );
-    
+
     onChange({
       additionalGuests: updatedGuests
     });
@@ -123,7 +123,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <User size={16} className="inline mr-1" />
@@ -138,7 +138,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Mail size={16} className="inline mr-1" />
@@ -153,7 +153,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Phone size={16} className="inline mr-1" />
@@ -197,7 +197,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
               Add Guest
             </Button>
           </div>
-          
+
           <div className="space-y-4">
             {data.additionalGuests.map((guest, index) => (
               <div key={guest.id} className="bg-gray-50 rounded-lg p-4">
@@ -210,7 +210,7 @@ const GuestDetailsForm = ({ data, onChange, room, totalNights }) => {
                     Remove
                   </button>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <input
                     type="text"

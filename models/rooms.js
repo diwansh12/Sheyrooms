@@ -64,7 +64,7 @@ const roomSchema = mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['Standard', 'Deluxe','Delux', 'Suite', 'Presidential', 'Family']
+    enum: ['Standard', 'Deluxe','Delux', 'Non-Delux', 'Non-Deluxe', 'Suite', 'Presidential', 'Family']
   },
   category: {
     type: String,
@@ -113,6 +113,10 @@ const roomSchema = mongoose.Schema({
       toDate: Date,
       reason: String
     }]
+  },
+  featured: {
+    type: Boolean,
+    default: false
   },
   ratings: {
     average: { type: Number, default: 0, min: 0, max: 5 },

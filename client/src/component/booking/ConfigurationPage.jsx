@@ -1,19 +1,19 @@
 // components/booking/ConfirmationPage.jsx - Booking Confirmation
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  CheckCircle, 
-  Calendar, 
-  MapPin, 
-  Phone, 
-  Mail, 
+import {
+  CheckCircle,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
   Download,
   Share,
   MessageCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import Button from '../../Components/ui/Button';
+import Card from '../../Components/ui/Card';
 
 const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
   useEffect(() => {
@@ -42,7 +42,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ 
+        transition={{
           type: "spring",
           stiffness: 260,
           damping: 20,
@@ -85,7 +85,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
                   <div className="text-sm text-gray-600">{checkIn.format('MMMM DD, YYYY')}</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center">
                 <Calendar size={18} className="mr-3 text-gray-400" />
                 <div>
@@ -93,7 +93,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
                   <div className="text-sm text-gray-600">{checkOut.format('MMMM DD, YYYY')}</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center">
                 <MapPin size={18} className="mr-3 text-gray-400" />
                 <div>
@@ -114,7 +114,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
                   <div className="text-gray-600">Sent to your email address</div>
                 </div>
               </div>
-              
+
               <div className="flex items-start">
                 <MessageCircle size={16} className="mr-3 mt-1 text-gray-400" />
                 <div>
@@ -122,7 +122,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
                   <div className="text-gray-600">Check-in reminders and updates</div>
                 </div>
               </div>
-              
+
               <div className="flex items-start">
                 <Phone size={16} className="mr-3 mt-1 text-gray-400" />
                 <div>
@@ -144,7 +144,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
         >
           Download PDF
         </Button>
-        
+
         <Button
           onClick={shareBooking}
           icon={<Share size={18} />}
@@ -152,7 +152,7 @@ const ConfirmationPage = ({ booking, room, checkIn, checkOut }) => {
         >
           Share Booking
         </Button>
-        
+
         <Link to="/profile">
           <Button>
             View My Bookings

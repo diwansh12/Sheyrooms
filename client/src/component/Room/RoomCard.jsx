@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Share2, MapPin, Users, Wifi, Car, Coffee, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import Badge from '../ui/Badge';
+import Button from '../../Components/ui/Button';
+import Card from '../../Components/ui/Card';
+import Badge from '../../Components/ui/Badge';
 
 const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -43,7 +43,7 @@ const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
           alt={room.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        
+
         {/* Image Navigation */}
         {room.imageurls.length > 1 && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
@@ -51,9 +51,8 @@ const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                }`}
+                className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                  }`}
               />
             ))}
           </div>
@@ -65,13 +64,12 @@ const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleFavoriteClick}
-            className={`p-2 rounded-full backdrop-blur-sm transition-colors ${
-              isFavorited ? 'bg-red-500 text-white' : 'bg-white/20 text-white'
-            }`}
+            className={`p-2 rounded-full backdrop-blur-sm transition-colors ${isFavorited ? 'bg-red-500 text-white' : 'bg-white/20 text-white'
+              }`}
           >
             <Heart size={18} fill={isFavorited ? 'currentColor' : 'none'} />
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -101,7 +99,7 @@ const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
               <span>{room.location?.wing} Wing, Floor {room.location?.floor}</span>
             </div>
           </div>
-          
+
           {room.ratings?.average > 0 && (
             <div className="flex items-center bg-green-500 text-white px-2 py-1 rounded-lg text-sm font-semibold">
               <Star size={14} className="mr-1" fill="currentColor" />
@@ -148,7 +146,7 @@ const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
             </div>
             <p className="text-sm text-gray-500">per night</p>
           </div>
-          
+
           <div className="text-right">
             <p className="text-sm text-gray-500">Total for stay</p>
             <p className="font-semibold text-lg">
@@ -159,17 +157,17 @@ const RoomCard = ({ room, fromdate, todate, onFavoriteToggle }) => {
 
         {/* Actions */}
         <div className="flex space-x-3">
-          <Link 
-            to={`/rooms/${room.slug || room._id}`} 
+          <Link
+            to={`/rooms/${room.slug || room._id}`}
             className="flex-1"
           >
             <Button variant="outline" className="w-full">
               View Details
             </Button>
           </Link>
-          
+
           {fromdate && todate && (
-            <Link 
+            <Link
               to={`/book/${room._id}/${fromdate}/${todate}`}
               className="flex-2"
             >

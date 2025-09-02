@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Heart, Share2, MapPin, Users, Wifi, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import Button from '../ui/Button';
+import Button from '../../Components/ui/Button';
 
 const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteToggle }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -14,7 +14,7 @@ const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteTogg
   const nextImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === room.imageurls.length - 1 ? 0 : prev + 1
     );
   };
@@ -22,7 +22,7 @@ const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteTogg
   const prevImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentImageIndex((prev) => 
+    setCurrentImageIndex((prev) =>
       prev === 0 ? room.imageurls.length - 1 : prev - 1
     );
   };
@@ -49,7 +49,7 @@ const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteTogg
             alt={room.name}
             className="w-full h-full object-cover"
           />
-          
+
           {/* Image Navigation */}
           {room.imageurls.length > 1 && (
             <>
@@ -65,15 +65,14 @@ const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteTogg
               >
                 <ChevronRight size={16} />
               </button>
-              
+
               {/* Dots Indicator */}
               <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
                 {room.imageurls.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-2 h-2 rounded-full ${
-                      index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
-                    }`}
+                    className={`w-2 h-2 rounded-full ${index === currentImageIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                      }`}
                   />
                 ))}
               </div>
@@ -88,9 +87,8 @@ const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteTogg
                 e.stopPropagation();
                 onFavoriteToggle?.(room._id, !isFavorite);
               }}
-              className={`p-2 rounded-full shadow-lg ${
-                isFavorite ? 'bg-red-500 text-white' : 'bg-white text-gray-700'
-              }`}
+              className={`p-2 rounded-full shadow-lg ${isFavorite ? 'bg-red-500 text-white' : 'bg-white text-gray-700'
+                }`}
             >
               <Heart size={14} fill={isFavorite ? 'currentColor' : 'none'} />
             </button>
@@ -147,7 +145,7 @@ const ResponsiveRoomCard = ({ room, fromdate, todate, isFavorite, onFavoriteTogg
               </div>
               <p className="text-xs text-gray-500">per night</p>
             </div>
-            
+
             {fromdate && todate && (
               <Link to={`/book/${room._id}/${fromdate}/${todate}`}>
                 <Button size="sm" className="px-4">

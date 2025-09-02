@@ -44,37 +44,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials) => {
-    try {
-      const response = await axios.post('/api/users/login', credentials);
-      const { user, token } = response.data;
+ const login = async (credentials) => {
+  try {
+    const response = await axios.post(`${process.env.REACT_APP_API_URL}/users/login`, credentials);
+    const { user, token } = response.data;
 
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      safeLocalStorage.setItem('currentUser', user);
-      safeLocalStorage.setItem('authToken', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+    safeLocalStorage.setItem('currentUser', user);
+    safeLocalStorage.setItem('authToken', token);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      return { success: true, user };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Login failed'
-      };
-    }
-  };
+    return { success: true, user };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Login failed'
+    };
+  }
+};
 
-  const register = async (userData) => {
-    try {
-      const response = await axios.post('/api/users/register', userData);
-      return { success: true, data: response.data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Registration failed'
-      };
-    }
-  };
+const register = async (userData) => {
+  try {
+    const response = await axios.post(`${process.env.REACT_APP_API_URL}/users/register`, userData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Registration failed'
+    };
+  }
+};
 
   const logout = () => {
     setCurrentUser(null);

@@ -1,10 +1,10 @@
 // components/booking/PaymentMethods.jsx - Enhanced Payment Component
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  CreditCard, 
-  Smartphone, 
-  Building, 
+import {
+  CreditCard,
+  Smartphone,
+  Building,
   Wallet,
   Shield,
   Lock,
@@ -15,8 +15,8 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import Button from '../../Components/ui/Button';
+import Card from '../../Components/ui/Card';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
@@ -123,7 +123,7 @@ const PaymentMethods = ({ data, onChange, onPaymentSuccess, processing, amount }
             }}
           />
         </div>
-        
+
         {cardError && (
           <div className="flex items-center text-red-600 text-sm">
             <AlertCircle size={16} className="mr-2" />
@@ -157,7 +157,7 @@ const PaymentMethods = ({ data, onChange, onPaymentSuccess, processing, amount }
                 You'll be redirected to PayPal to complete your payment securely.
               </p>
             </div>
-            
+
             <PayPalScriptProvider options={{
               "client-id": process.env.REACT_APP_PAYPAL_CLIENT_ID,
               currency: "USD"
@@ -211,7 +211,7 @@ const PaymentMethods = ({ data, onChange, onPaymentSuccess, processing, amount }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            
+
             <div className="grid grid-cols-3 gap-4">
               {['Google Pay', 'PhonePe', 'Paytm'].map((app) => (
                 <button
@@ -319,7 +319,7 @@ const PaymentMethods = ({ data, onChange, onPaymentSuccess, processing, amount }
                 <div>
                   <h4 className="font-semibold text-yellow-800 mb-1">Pay at Hotel</h4>
                   <p className="text-sm text-yellow-700">
-                    You can pay the full amount during check-in using cash or card. 
+                    You can pay the full amount during check-in using cash or card.
                     Your booking will be confirmed but marked as "payment pending".
                   </p>
                 </div>
@@ -374,18 +374,17 @@ const PaymentMethods = ({ data, onChange, onPaymentSuccess, processing, amount }
           >
             <div
               onClick={() => handleMethodSelect(method.id)}
-              className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                selectedMethod === method.id
+              className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedMethod === method.id
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
-              }`}
+                }`}
             >
               {method.popular && (
                 <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                   Popular
                 </div>
               )}
-              
+
               <div className="flex items-start">
                 <div className="text-blue-600 mr-3 mt-1">
                   {method.icon}
@@ -394,12 +393,12 @@ const PaymentMethods = ({ data, onChange, onPaymentSuccess, processing, amount }
                   <h3 className="font-semibold text-gray-900">{method.name}</h3>
                   <p className="text-sm text-gray-600 mt-1">{method.description}</p>
                 </div>
-                
+
                 <div className="ml-2">
                   <input
                     type="radio"
                     checked={selectedMethod === method.id}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     className="text-blue-600"
                   />
                 </div>

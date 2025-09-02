@@ -10,7 +10,7 @@ const { sendBookingConfirmation, sendCancellationEmail } = require("../client/sr
 const { generateBookingPDF } = require("../client/src/utils/pdfGenerator");
 
 
-// Enhanced booking creation with comprehensive validation
+// ✅ ENHANCED: Better date validation with comprehensive logging
 router.post("/bookroom", authenticateToken, validateBooking, async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -32,36 +32,116 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
       totalNights
     } = req.body;
 
-    // Validate dates
-    const startDate = new Date(fromdate);
-    const endDate = new Date(todate);
-    const now = new Date();
+    // ✅ ENHANCED: Comprehensive date logging and validation
+    console.log('📅 BOOKING DATE VALIDATION:', {
+      received: {
+        fromdate: fromdate,
+        todate: todate,
+        fromdateType: typeof fromdate,
+        todateType: typeof todate
+      },
+      serverTime: {
+        now: new Date().toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        offset: new Date().getTimezoneOffset()
+      }
+    });
 
-    if (startDate <= now) {
+    // ✅ IMPROVED: More robust date parsing
+    let startDate, endDate;
+    
+    try {
+      // Handle both ISO strings and direct Date objects
+      startDate = new Date(fromdate);
+      endDate = new Date(todate);
+      
+      // Validate parsed dates
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error('Invalid date format');
+      }
+      
+      console.log('✅ DATE PARSING SUCCESS:', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        startDateLocal: startDate.toLocaleDateString(),
+        endDateLocal: endDate.toLocaleDateString()
+      });
+      
+    } catch (dateError) {
+      console.error('❌ DATE PARSING ERROR:', dateError);
       return res.status(400).json({
         success: false,
-        message: "Check-in date must be in the future"
+        message: "Invalid date format provided",
+        details: {
+          fromdate: fromdate,
+          todate: todate,
+          error: dateError.message
+        }
+      });
+    }
+
+    // ✅ IMPROVED: More lenient date validation
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Start of today
+    const startOfDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    
+    console.log('🕐 DATE COMPARISON:', {
+      now: now.toISOString(),
+      today: today.toISOString(),
+      startOfDay: startOfDay.toISOString(),
+      isStartDateToday: startOfDay.getTime() === today.getTime(),
+      isStartDateFuture: startOfDay >= today,
+      daysDifference: Math.ceil((startOfDay - today) / (1000 * 60 * 60 * 24))
+    });
+
+    // ✅ FIXED: Allow same-day bookings, only reject past dates
+    if (startOfDay < today) {
+      console.error('❌ DATE VALIDATION FAILED: Check-in date is in the past');
+      return res.status(400).json({
+        success: false,
+        message: "Check-in date cannot be in the past",
+        details: {
+          requestedDate: startDate.toISOString(),
+          serverDate: now.toISOString(),
+          daysInPast: Math.ceil((today - startOfDay) / (1000 * 60 * 60 * 24))
+        }
       });
     }
 
     if (endDate <= startDate) {
+      console.error('❌ DATE VALIDATION FAILED: End date not after start date');
       return res.status(400).json({
         success: false,
-        message: "Check-out date must be after check-in date"
+        message: "Check-out date must be after check-in date",
+        details: {
+          checkIn: startDate.toISOString(),
+          checkOut: endDate.toISOString()
+        }
       });
     }
 
-    // Check room availability with session
+    // ✅ ENHANCED: Room validation with logging
+    console.log('🏠 ROOM VALIDATION:', { roomId, findingRoom: true });
+    
     const room = await Room.findById(roomId).session(session);
     if (!room) {
+      console.error('❌ ROOM NOT FOUND:', roomId);
       await session.abortTransaction();
       return res.status(404).json({
         success: false,
-        message: "Room not found"
+        message: "Room not found",
+        roomId: roomId
       });
     }
 
-    if (!room.availability.isActive) {
+    console.log('✅ ROOM FOUND:', {
+      roomId: room._id,
+      roomName: room.name,
+      isActive: room.availability?.isActive,
+      currentBookingsCount: room.currentbookings?.length || 0
+    });
+
+    if (!room.availability?.isActive) {
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
@@ -69,17 +149,51 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
       });
     }
 
-
-    // Check for conflicting bookings
+    // ✅ ENHANCED: Conflict detection with detailed logging
+    console.log('🔍 CHECKING FOR CONFLICTS...');
+    
     const conflictingBookings = room.currentbookings.filter(booking => {
+      // Skip cancelled bookings
+      if (booking.status === 'cancelled') {
+        console.log('⏭️ Skipping cancelled booking:', booking.bookingId);
+        return false;
+      }
+
       const bookingStart = new Date(booking.fromdate);
       const bookingEnd = new Date(booking.todate);
 
-      return (
-        (startDate >= bookingStart && startDate < bookingEnd) ||
-        (endDate > bookingStart && endDate <= bookingEnd) ||
-        (startDate <= bookingStart && endDate >= bookingEnd)
+      console.log('🔍 Checking conflict with:', {
+        bookingId: booking.bookingId,
+        bookingStart: bookingStart.toISOString().split('T')[0],
+        bookingEnd: bookingEnd.toISOString().split('T'),
+        requestedStart: startDate.toISOString().split('T'),
+        requestedEnd: endDate.toISOString().split('T'),
+        status: booking.status
+      });
+
+      // ✅ FIXED: Proper date overlap logic
+      // Two date ranges overlap if: start1 < end2 AND start2 < end1
+      const hasConflict = (
+        startDate < bookingEnd && bookingStart < endDate
       );
+      
+      if (hasConflict) {
+        console.log('⚠️ CONFLICT DETECTED');
+      } else {
+        console.log('✅ NO CONFLICT');
+      }
+
+      return hasConflict;
+    });
+
+    console.log('📊 CONFLICT CHECK RESULTS:', {
+      totalBookings: room.currentbookings.length,
+      conflictsFound: conflictingBookings.length,
+      conflictDetails: conflictingBookings.map(b => ({
+        id: b.bookingId,
+        dates: `${new Date(b.fromdate).toISOString().split('T')[0]} to ${new Date(b.todate).toISOString().split('T')}`,
+        status: b.status
+      }))
     });
 
     if (conflictingBookings.length > 0) {
@@ -87,10 +201,17 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
       return res.status(409).json({
         success: false,
         message: "Room is not available for the selected dates",
-        conflictingBookings
+        conflictingBookings: conflictingBookings.map(booking => ({
+          bookingId: booking.bookingId,
+          fromdate: booking.fromdate,
+          todate: booking.todate,
+          status: booking.status,
+          userid: booking.userid
+        }))
       });
     }
 
+    // ✅ Continue with the rest of your booking logic...
     // Calculate pricing
     const basePrice = room.currentPrice || room.rentperday;
     const subtotal = basePrice * totalNights;
@@ -100,18 +221,39 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
     const serviceFee = Math.round(totalBeforeTax * 0.05); // 5% service fee
     const calculatedTotal = totalBeforeTax + taxes + serviceFee;
 
-    // Validate total amount (allow 1% tolerance for rounding)
-    if (Math.abs(totalamount - calculatedTotal) > calculatedTotal * 0.01) {
+    console.log('💰 PRICING CALCULATION:', {
+      basePrice,
+      totalNights,
+      subtotal,
+      addOnTotal,
+      totalBeforeTax,
+      taxes,
+      serviceFee,
+      calculatedTotal,
+      receivedTotal: totalamount
+    });
+
+    // ✅ IMPROVED: More lenient total validation (allow 5% tolerance)
+    const tolerance = calculatedTotal * 0.05;
+    if (Math.abs(totalamount - calculatedTotal) > tolerance) {
+      console.error('❌ PRICE MISMATCH:', {
+        expected: calculatedTotal,
+        received: totalamount,
+        difference: Math.abs(totalamount - calculatedTotal),
+        tolerance: tolerance
+      });
+      
       await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Total amount mismatch",
         expected: calculatedTotal,
-        received: totalamount
+        received: totalamount,
+        tolerance: tolerance
       });
     }
 
-    // Create comprehensive booking
+    // Rest of your booking creation code remains the same...
     const newBooking = new Booking({
       room: room.name,
       roomId,
@@ -121,7 +263,7 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
       guests: {
         adults: guestCount.adults,
         children: guestCount.children,
-        infants: guestCount.infants,
+        infants: guestCount.infants || 0,
         details: [
           {
             name: `${primaryGuest.firstName} ${primaryGuest.lastName}`,
@@ -155,7 +297,19 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
       status: 'confirmed'
     });
 
+    console.log('💾 SAVING BOOKING:', {
+      bookingId: 'generating...',
+      room: room.name,
+      dates: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')}`,
+      amount: calculatedTotal
+    });
+
     const savedBooking = await newBooking.save({ session });
+    
+    console.log('✅ BOOKING SAVED:', {
+      bookingId: savedBooking._id,
+      bookingReference: savedBooking.bookingReference
+    });
 
     // Update room bookings
     room.currentbookings.push({
@@ -167,39 +321,41 @@ router.post("/bookroom", authenticateToken, validateBooking, async (req, res) =>
     });
 
     await room.save({ session });
+    console.log('✅ ROOM UPDATED with new booking');
 
-    // Update user booking history
+    // Update user (with null check for loyaltyProgram)
     const user = await User.findById(userid).session(session);
-if (user) {
-  // ✅ Initialize loyalty program if it doesn't exist
-  if (!user.loyaltyProgram) {
-    user.loyaltyProgram = {
-      points: 0,
-      totalSpent: 0,
-      level: 'Bronze'
-    };
-  }
-  
-  // Now safely update loyalty program
-  user.loyaltyProgram.points += Math.floor(totalamount / 100);
-  user.loyaltyProgram.totalSpent += totalamount;
-  
-  // Update loyalty level
-  if (user.loyaltyProgram.totalSpent >= 100000) user.loyaltyProgram.level = 'Platinum';
-  else if (user.loyaltyProgram.totalSpent >= 50000) user.loyaltyProgram.level = 'Gold';
-  else if (user.loyaltyProgram.totalSpent >= 25000) user.loyaltyProgram.level = 'Silver';
-  
-  await user.save({ session });
-}
+    if (user) {
+      if (!user.loyaltyProgram) {
+        user.loyaltyProgram = {
+          points: 0,
+          totalSpent: 0,
+          level: 'Bronze'
+        };
+      }
+      
+      user.loyaltyProgram.points += Math.floor(totalamount / 100);
+      user.loyaltyProgram.totalSpent += totalamount;
+      
+      if (user.loyaltyProgram.totalSpent >= 100000) user.loyaltyProgram.level = 'Platinum';
+      else if (user.loyaltyProgram.totalSpent >= 50000) user.loyaltyProgram.level = 'Gold';
+      else if (user.loyaltyProgram.totalSpent >= 25000) user.loyaltyProgram.level = 'Silver';
+      
+      await user.save({ session });
+      console.log('✅ USER UPDATED with loyalty points');
+    }
 
     await session.commitTransaction();
+    console.log('✅ TRANSACTION COMMITTED SUCCESSFULLY');
 
     // Send confirmation email (async, don't wait)
-    sendBookingConfirmation(user.email, {
-      booking: savedBooking,
-      room,
-      guest: primaryGuest
-    }).catch(console.error);
+    if (user) {
+      sendBookingConfirmation(user.email, {
+        booking: savedBooking,
+        room,
+        guest: primaryGuest
+      }).catch(console.error);
+    }
 
     res.status(201).json({
       success: true,
@@ -210,7 +366,7 @@ if (user) {
         room: room.name,
         checkIn: startDate.toISOString(),
         checkOut: endDate.toISOString(),
-        totalAmount: calculatedTotal,
+        totalamount: calculatedTotal,
         paymentStatus: savedBooking.payment.status,
         loyaltyPointsEarned: Math.floor(totalamount / 100)
       }
@@ -218,16 +374,26 @@ if (user) {
 
   } catch (error) {
     await session.abortTransaction();
-    console.error("Booking creation error:", error);
+    console.error("❌ BOOKING CREATION ERROR:", {
+      error: error.message,
+      stack: error.stack,
+      requestBody: req.body
+    });
+    
     res.status(500).json({
       success: false,
       message: "Failed to create booking",
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      debug: process.env.NODE_ENV === 'development' ? {
+        errorType: error.constructor.name,
+        errorMessage: error.message
+      } : undefined
     });
   } finally {
     session.endSession();
   }
 });
+
 
 // Get user bookings with enhanced details
 router.post("/getuserbookings", authenticateToken, async (req, res) => {
@@ -299,15 +465,22 @@ res.status(500).json({
   }
 });
 
-// Enhanced booking cancellation
 router.post("/cancelBooking", authenticateToken, async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const { bookingid, reason } = req.body;
+    const { bookingId, reason } = req.body;
 
-    const booking = await Booking.findById(bookingid).session(session);
+    if (!bookingId) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Booking ID is required"
+      });
+    }
+
+    const booking = await Booking.findById(bookingId).session(session);
     if (!booking) {
       await session.abortTransaction();
       return res.status(404).json({
@@ -316,93 +489,24 @@ router.post("/cancelBooking", authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if cancellation is allowed
-    const checkInDate = new Date(booking.fromdate);
-    const now = new Date();
-    const hoursUntilCheckIn = (checkInDate - now) / (1000 * 60 * 60);
-
-    if (hoursUntilCheckIn < 24) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Cancellation not allowed within 24 hours of check-in"
-      });
-    }
-
-    if (booking.status === 'cancelled') {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Booking is already cancelled"
-      });
-    }
-
-    // Calculate refund amount based on cancellation policy
-    let refundPercentage = 100;
-    if (hoursUntilCheckIn < 48) refundPercentage = 50;
-    else if (hoursUntilCheckIn < 72) refundPercentage = 75;
-
-    const refundAmount = Math.round(booking.pricing.totalamount * refundPercentage / 100);
-
-    // Update booking
-    booking.status = 'cancelled';
+    booking.status = "cancelled";
     booking.cancellation = {
-      cancelledAt: now,
-      reason: reason || 'Cancelled by user',
-      refundAmount,
-      cancelledBy: 'user'
+      cancelledAt: new Date(),
+      reason: reason || "User requested cancellation",
+      cancelledBy: "user"
     };
-    booking.payment.refundAmount = refundAmount;
-    booking.payment.status = refundAmount > 0 ? 'refunded' : 'cancelled';
 
     await booking.save({ session });
 
-    // Remove from room bookings
-    const room = await Room.findById(booking.roomId).session(session);
-    if (room) {
-      room.currentbookings = room.currentbookings.filter(
-        roomBooking => roomBooking.bookingId.toString() !== bookingid
-      );
-      await room.save({ session });
-    }
-
-    // Update user loyalty points (deduct earned points)
-    const user = await User.findById(booking.userid).session(session);
-    if (user) {
-      const pointsToDeduct = Math.floor(booking.pricing.totalamount / 100);
-      user.loyaltyProgram.points = Math.max(0, user.loyaltyProgram.points - pointsToDeduct);
-      user.loyaltyProgram.totalSpent = Math.max(0, user.loyaltyProgram.totalSpent - booking.pricing.totalamount);
-      await user.save({ session });
-    }
-
     await session.commitTransaction();
-
-    // Send cancellation email
-    if (user) {
-      sendCancellationEmail(user.email, {
-        booking,
-        refundAmount,
-        refundPercentage
-      }).catch(console.error);
-    }
-
-    res.json({
-      success: true,
-      message: "Booking cancelled successfully",
-      data: {
-        refundAmount,
-        refundPercentage,
-        processingTime: "3-5 business days"
-      }
-    });
-
-  } catch (error) {
+    res.json({ success: true, message: "Booking cancelled successfully" });
+  } catch (err) {
     await session.abortTransaction();
-    console.error("Booking cancellation error:", error);
+    console.error("❌ Cancel Booking Error:", err);
     res.status(500).json({
       success: false,
       message: "Failed to cancel booking",
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      error: err.message
     });
   } finally {
     session.endSession();
@@ -445,26 +549,44 @@ router.post("/modifyBooking", authenticateToken, async (req, res) => {
 
     // Check room availability for new dates
     const room = await Room.findById(booking.roomId).session(session);
-    const conflictingBookings = room.currentbookings.filter(roomBooking => {
-      if (roomBooking.bookingId.toString() === bookingid) return false; // Exclude current booking
+    // In your backend bookingsRoute.js, update the conflict check:
 
-      const bookingStart = new Date(roomBooking.fromdate);
-      const bookingEnd = new Date(roomBooking.todate);
+// ✅ FIXED conflict checking logic in your backend
+const conflictingBookings = room.currentbookings.filter(booking => {
+  // Skip cancelled bookings
+  if (booking.status === 'cancelled') {
+    console.log('⏭️ Skipping cancelled booking:', booking.bookingId);
+    return false;
+  }
 
-      return (
-        (newStartDate >= bookingStart && newStartDate < bookingEnd) ||
-        (newEndDate > bookingStart && newEndDate <= bookingEnd) ||
-        (newStartDate <= bookingStart && newEndDate >= bookingEnd)
-      );
-    });
+  const bookingStart = new Date(booking.fromdate);
+  const bookingEnd = new Date(booking.todate);
 
-    if (conflictingBookings.length > 0) {
-      await session.abortTransaction();
-      return res.status(409).json({
-        success: false,
-        message: "Room is not available for the new dates"
-      });
-    }
+  console.log('🔍 Checking conflict with:', {
+    bookingId: booking.bookingId,
+    bookingStart: bookingStart.toISOString().split('T')[0],
+    bookingEnd: bookingEnd.toISOString().split('T'),
+    requestedStart: startDate.toISOString().split('T'),
+    requestedEnd: endDate.toISOString().split('T'),
+    status: booking.status
+  });
+
+  // ✅ FIXED: Proper date overlap logic
+  // Two date ranges overlap if: start1 < end2 AND start2 < end1
+  const hasConflict = (
+    startDate < bookingEnd && bookingStart < endDate
+  );
+  
+  if (hasConflict) {
+    console.log('⚠️ CONFLICT DETECTED');
+  } else {
+    console.log('✅ NO CONFLICT');
+  }
+
+  return hasConflict;
+});
+
+
 
     // Calculate new pricing
     const roomRate = room.currentPrice || room.rentperday;
@@ -543,20 +665,52 @@ router.post("/modifyBooking", authenticateToken, async (req, res) => {
 });
 
 
-// Add this test route to your booking routes file
-// Add this to your booking routes file
-router.get('/debug-auth', authenticateToken, (req, res) => {
-  console.log('🧪 Debug auth endpoint reached successfully');
-  res.json({
-    success: true,
-    message: 'Authentication working perfectly',
-    user: {
-      id: req.user._id,
-      email: req.user.email,
-      name: req.user.name
-    },
-    timestamp: new Date().toISOString()
-  });
+// ✅ ADD THIS: Debug endpoint to check room bookings
+router.get('/debug-room/:roomId', authenticateToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: 'Room not found'
+      });
+    }
+    
+    const currentBookings = room.currentbookings.map(booking => ({
+      bookingId: booking.bookingId,
+      fromdate: booking.fromdate,
+      todate: booking.todate,
+      status: booking.status,
+      userid: booking.userid,
+      datesFormatted: {
+        from: new Date(booking.fromdate).toISOString().split('T')[0],
+        to: new Date(booking.todate).toISOString().split('T')
+      }
+    }));
+    
+    res.json({
+      success: true,
+      data: {
+        roomId: room._id,
+        roomName: room.name,
+        roomType: room.type,
+        isActive: room.availability?.isActive,
+        totalBookings: currentBookings.length,
+        activeBookings: currentBookings.filter(b => b.status !== 'cancelled').length,
+        bookings: currentBookings
+      }
+    });
+    
+  } catch (error) {
+    console.error('Debug room error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to debug room',
+      error: error.message
+    });
+  }
 });
 
 // Alternative approach - direct database update

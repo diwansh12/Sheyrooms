@@ -10,6 +10,7 @@ function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
 
+  
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
@@ -71,6 +72,10 @@ function Navbar() {
       window.location.href = '/login';
     }
   };
+  // Don't render navbar on landing page
+  if (location.pathname === '/' || location.pathname === '/landing') {
+    return null;
+  }
 
 
   return (

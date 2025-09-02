@@ -1,18 +1,20 @@
 {
-  "name": "sheyrooms",
+  "name": "sheyrooms-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-     "build": "react-scripts build"
+    "build": "react-scripts build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@paypal/checkout-server-sdk": "^1.0.3",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
@@ -20,15 +22,20 @@
     "mongoose": "^8.9.3",
     "mongoose-paginate-v2": "^1.9.1",
     "nodemailer": "^7.0.5",
+    "path-browserify": "^1.0.1",
     "pdfkit": "^0.17.1",
     "react-scripts": "^5.0.1",
     "react-simple-typewriter": "^5.0.1",
     "router": "^2.0.0",
     "styled-jsx": "^5.1.7",
-    "sweetalert2": "^11.21.0"
+    "sweetalert2": "^11.21.0",
+    "util": "^0.12.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "autoprefixer": "^10.4.21",
+    "nodemon": "^3.1.9",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11"
   },
   "keywords": [],
   "description": ""

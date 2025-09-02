@@ -1,7 +1,7 @@
 // components/booking/RoomPreferences.jsx - Room Preferences Component
 import React from 'react';
 import { Bed, Wind, Volume2, Accessibility, Clock, Coffee } from 'lucide-react';
-import Card from '../ui/Card';
+import Card from '../../Components/ui/Card';
 
 const RoomPreferences = ({ data, onChange }) => {
   const updatePreferences = (field, value) => {
@@ -15,7 +15,7 @@ const RoomPreferences = ({ data, onChange }) => {
 
   const toggleAddOn = (addOnId, name, price) => {
     const exists = data.addOns.find(item => item.id === addOnId);
-    
+
     if (exists) {
       onChange({
         addOns: data.addOns.filter(item => item.id !== addOnId)
@@ -46,7 +46,7 @@ const RoomPreferences = ({ data, onChange }) => {
       {/* Room Preferences */}
       <Card>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Room Features</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -119,19 +119,18 @@ const RoomPreferences = ({ data, onChange }) => {
       <Card>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Add-on Services</h3>
         <p className="text-gray-600 mb-6">Enhance your stay with our premium services</p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {addOns.map((addOn) => {
             const isSelected = data.addOns.find(item => item.id === addOn.id);
-            
+
             return (
               <div
                 key={addOn.id}
-                className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                  isSelected
+                className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${isSelected
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 onClick={() => toggleAddOn(addOn.id, addOn.name, addOn.price)}
               >
                 <div className="flex items-start justify-between">
@@ -145,15 +144,15 @@ const RoomPreferences = ({ data, onChange }) => {
                       <p className="text-lg font-bold text-blue-600">₹{addOn.price.toLocaleString()}</p>
                     </div>
                   </div>
-                  
+
                   <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     className="mt-1"
                   />
                 </div>
-                
+
                 {isSelected && (
                   <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">

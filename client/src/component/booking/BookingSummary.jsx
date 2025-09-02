@@ -1,7 +1,7 @@
 // components/booking/BookingSummary.jsx - Booking Summary Sidebar
 import React from 'react';
 import { Calendar, Users, MapPin, Clock, Tag } from 'lucide-react';
-import Card from '../ui/Card';
+import Card from '../../Components/ui/Card';
 
 const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) => {
   const calculateTotal = () => {
@@ -48,7 +48,7 @@ const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) =
       {/* Booking Details */}
       <Card>
         <h4 className="font-semibold text-gray-900 mb-4">Booking Details</h4>
-        
+
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-gray-600">
@@ -57,7 +57,7 @@ const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) =
             </div>
             <div className="font-medium">{checkIn.format('MMM DD, YYYY')}</div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-gray-600">
               <Calendar size={16} className="mr-2" />
@@ -65,7 +65,7 @@ const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) =
             </div>
             <div className="font-medium">{checkOut.format('MMM DD, YYYY')}</div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-gray-600">
               <Clock size={16} className="mr-2" />
@@ -73,7 +73,7 @@ const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) =
             </div>
             <div className="font-medium">{totalNights} night{totalNights > 1 ? 's' : ''}</div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center text-sm text-gray-600">
               <Users size={16} className="mr-2" />
@@ -107,7 +107,7 @@ const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) =
       {/* Price Breakdown */}
       <Card>
         <h4 className="font-semibold text-gray-900 mb-4">Price Summary</h4>
-        
+
         <div className="space-y-3">
           <div className="flex justify-between">
             <span className="text-gray-600">
@@ -115,26 +115,26 @@ const BookingSummary = ({ room, bookingData, checkIn, checkOut, totalNights }) =
             </span>
             <span>₹{(bookingData.pricing.basePrice * totalNights).toLocaleString()}</span>
           </div>
-          
+
           {totals.addOnTotal > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">Add-on services</span>
               <span>₹{totals.addOnTotal.toLocaleString()}</span>
             </div>
           )}
-          
+
           <div className="flex justify-between">
             <span className="text-gray-600">Service fee</span>
             <span>₹{totals.serviceFee.toLocaleString()}</span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-gray-600">Taxes & fees</span>
             <span>₹{totals.taxes.toLocaleString()}</span>
           </div>
-          
+
           <hr className="my-3" />
-          
+
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold">Total</span>
             <span className="text-xl font-bold text-blue-600">₹{totals.total.toLocaleString()}</span>

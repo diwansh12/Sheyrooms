@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+    // Do NOT set "types": [] unless you explicitly want to limit auto-included types
+    // If you previously set "types": [], remove it so TS can include @types/* automatically
+    // Only if you must control it, use:
+    // "types": ["react", "react-dom", "node"]
+  },
+  "include": [
+    "src",
+    "src/custom.d.ts",
+    "Screens",
+    "Components",
+    "globals.d.ts",
+    "globals.css",
+    "index.js"
+  ]
+}
